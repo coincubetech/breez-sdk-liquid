@@ -528,7 +528,7 @@ impl LiquidSdk {
     }
 
     async fn start_plugins(self: &Arc<LiquidSdk>) -> SdkResult<()> {
-        for (_, plugin) in self.plugins.lock().await.iter() {
+        for plugin in self.plugins.lock().await.values() {
             self.start_plugin_inner(plugin).await?;
         }
         Ok(())
@@ -613,7 +613,7 @@ impl LiquidSdk {
                 handle.handle.abort();
             }
         }
-        for (_, plugin) in self.plugins.lock().await.iter() {
+        for plugin in self.plugins.lock().await.values() {
             plugin.on_stop().await;
         }
 
@@ -1335,11 +1335,10 @@ impl LiquidSdk {
         let estimated_asset_fees;
         let receiver_amount_sat;
         let asset_id;
-        let payment_destination;
         let mut validate_funds = true;
         let mut exchange_amount_sat = None;
 
-        match self.parse(&req.destination).await {
+        let payment_destination = match self.parse(&req.destination).await {
             Ok(InputType::LiquidAddress {
                 address: mut liquid_address_data,
             }) => {
@@ -1501,10 +1500,10 @@ impl LiquidSdk {
 
                 liquid_address_data.amount_sat = Some(receiver_amount_sat);
                 liquid_address_data.asset_id = Some(asset_id.clone());
-                payment_destination = SendDestination::LiquidAddress {
+                SendDestination::LiquidAddress {
                     address_data: liquid_address_data,
                     bip353_address: None,
-                };
+                }
             }
             Ok(InputType::Bolt11 { invoice }) => {
                 self.ensure_send_is_not_self_transfer(&invoice.bolt11)?;
@@ -1573,10 +1572,10 @@ impl LiquidSdk {
                     }
                 };
 
-                payment_destination = SendDestination::Bolt11 {
+                SendDestination::Bolt11 {
                     invoice,
                     bip353_address: None,
-                };
+                }
             }
             Ok(InputType::Bolt12Offer {
                 offer,
@@ -1649,11 +1648,11 @@ impl LiquidSdk {
                     );
                 }
 
-                payment_destination = SendDestination::Bolt12 {
+                SendDestination::Bolt12 {
                     offer,
                     receiver_amount_sat,
                     bip353_address,
-                };
+                }
             }
             _ => {
                 return Err(PaymentError::generic("Destination is not valid"));

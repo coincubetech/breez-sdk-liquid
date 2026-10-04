@@ -1,0 +1,6 @@
+.env
+
+swapproxy
+requests.db
+
+.idea/

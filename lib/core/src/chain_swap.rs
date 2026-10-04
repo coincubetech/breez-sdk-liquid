@@ -353,7 +353,7 @@ impl ChainSwapHandler {
                     if let Err(e) = self.handle_amountless_update(swap).await {
                         // In case of error, we log the error but don't mark as refundable,
                         // letting the recovery logic handle the state.
-                        error!("Failed to accept the quote for swap {}: {e:?}", &swap.id);
+                        error!("Failed to accept the quote for swap {}: {e:?}", swap.id);
                     }
                     return Ok(());
                 }
@@ -411,7 +411,7 @@ impl ChainSwapHandler {
             .get_zero_amount_chain_swap_quote(&id)
             .await
             .map(|quote| quote.to_sat())?;
-        info!("Got quote of {quote} sat for swap {}", &id);
+        info!("Got quote of {quote} sat for swap {}", id);
 
         match self.validate_amountless_swap(swap, quote).await? {
             ValidateAmountlessSwapResult::ReadyForAccepting {
@@ -458,7 +458,7 @@ impl ChainSwapHandler {
             matches!(swap.direction, Direction::Incoming),
             PaymentError::generic(format!(
                 "Only an incoming chain swap can be a zero-amount swap. Swap ID: {}",
-                &swap.id
+                swap.id
             ))
         );
 
