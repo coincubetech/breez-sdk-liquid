@@ -1,0 +1,25 @@
+# Keep the pinned Boltz configuration compatible with current LND images.
+# LND 0.21 requires bitcoin.timelockdelta >= 24 (the upstream fixture uses 18).
+x-lnd-command: &lnd-command
+  - --listen=0.0.0.0:9735
+  - --rpclisten=0.0.0.0:10009
+  - --restlisten=0.0.0.0:8081
+  - --bitcoin.timelockdelta=24
+  - --bitcoin.active
+  - --bitcoin.regtest
+  - --bitcoin.node=bitcoind
+  - --bitcoind.rpchost=bitcoind
+  - --bitcoind.zmqpubrawtx=bitcoind:29000
+  - --bitcoind.zmqpubrawblock=bitcoind:29001
+  - --bitcoind.rpccookie=/app/bitcoin/regtest/.cookie
+  - --noseedbackup
+  - --protocol.wumbo-channels
+  - --lnddir=/app/lnd
+
+services:
+  lnd-1:
+    command: *lnd-command
+  lnd-2:
+    command: *lnd-command
+  lnd-3:
+    command: *lnd-command
