@@ -1,4 +1,10 @@
-tonic::include_proto!("sync");
+// Tonic generates methods returning its public Status type. Keep this lint
+// exception confined to generated code rather than changing the wire client API.
+#[allow(clippy::result_large_err)]
+mod generated {
+    tonic::include_proto!("sync");
+}
+pub use generated::*;
 
 use std::sync::Arc;
 

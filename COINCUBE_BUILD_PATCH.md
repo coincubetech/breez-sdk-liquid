@@ -19,3 +19,18 @@ The dependency is changed in the manifests themselves so standalone consumers
 also resolve it without needing a root-level Cargo patch. This does not restore
 the missing swapproxy regtest service or imply that the full regtest environment
 is operational.
+
+## CI and regtest follow-up
+
+The original swapproxy commit has since been recovered from the local Git object
+cache and restored as an unmodified source snapshot under
+`regtest/swapproxy-service/swapproxy/`, with its GPL-3.0 license intact. See
+`regtest/swapproxy-service/PROVENANCE.md`. Cargo no longer needs the unavailable
+submodule remote, and the regtest Docker build has its original source again.
+
+Rust 1.98 Clippy findings are fixed without changing payment behavior. The
+`result_large_err` allowance applies only to Tonic-generated client code, whose
+public return type is dictated by the generator; handwritten code remains linted.
+Regtest startup uses Bash as required by its script, and failed startup now emits
+container logs and health state. Restoring the source does not by itself prove
+that the full regtest environment is healthy.

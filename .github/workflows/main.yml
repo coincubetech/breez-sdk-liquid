@@ -218,7 +218,19 @@ jobs:
 
       - name: Start regtest environment
         working-directory: regtest
-        run: sh start.sh
+        run: bash start.sh
+
+      - name: Diagnose failed regtest startup
+        if: failure()
+        working-directory: regtest
+        run: |
+          docker compose -f boltz/docker-compose.yml ps -a || true
+          docker compose -f boltz/docker-compose.yml logs --no-color --tail=100 || true
+          docker compose ps -a || true
+          docker compose logs --no-color --tail=100 || true
+          for container in boltz-lnd-1 boltz-lnd-2 boltz-lnd-3 boltz-electrs-liquid; do
+            docker inspect --format '{{json .State}}' "$container" || true
+          done
 
       - name: Fix file permissions for regtest files
         run: |
@@ -363,7 +375,19 @@ jobs:
 
       - name: Start regtest environment
         working-directory: regtest
-        run: sh start.sh
+        run: bash start.sh
+
+      - name: Diagnose failed regtest startup
+        if: failure()
+        working-directory: regtest
+        run: |
+          docker compose -f boltz/docker-compose.yml ps -a || true
+          docker compose -f boltz/docker-compose.yml logs --no-color --tail=100 || true
+          docker compose ps -a || true
+          docker compose logs --no-color --tail=100 || true
+          for container in boltz-lnd-1 boltz-lnd-2 boltz-lnd-3 boltz-electrs-liquid; do
+            docker inspect --format '{{json .State}}' "$container" || true
+          done
 
       - name: Fix file permissions for regtest files
         run: |
