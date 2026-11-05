@@ -3,19 +3,28 @@ name: CI
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push events but only for the "main" branch
-  push:
-    branches: [main]
   pull_request:
+    branches:
+      - main
+      - redesign
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - edited
+      - converted_to_draft
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: batch-${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'edited' && github.event.changes.base == null && github.run_id || 'candidate' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   fmt:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Cargo Format
     runs-on: ubuntu-latest
     steps:
@@ -28,6 +37,7 @@ jobs:
           cargo fmt -- --check
 
   clippy:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Cargo Clippy
     runs-on: ubuntu-latest
     steps:
@@ -58,6 +68,7 @@ jobs:
         run: cargo clippy -- -D warnings
 
   clippy-wasm:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Cargo Clippy Wasm
     runs-on: ubuntu-latest
     steps:
@@ -85,6 +96,7 @@ jobs:
         run: make wasm-clippy
 
   build:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Cargo Build
     runs-on: ubuntu-latest
     steps:
@@ -125,6 +137,7 @@ jobs:
           fi
 
   build-wasm:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Cargo Build Wasm
     runs-on: ubuntu-latest
     steps:
@@ -167,6 +180,7 @@ jobs:
           fi
 
   tests:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Test sdk-core
     runs-on: ubuntu-latest
     steps:
@@ -189,6 +203,7 @@ jobs:
         run: cargo test
 
   regtest-tests:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Regtest sdk-core tests
     runs-on: ubuntu-latest
     steps:
@@ -230,6 +245,7 @@ jobs:
         run: make cargo-regtest-test
 
   build-bindings:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Test bindings
     runs-on: ubuntu-latest
     steps:
@@ -290,6 +306,7 @@ jobs:
           cargo test
 
   test-wasm:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Test Wasm
     runs-on: ubuntu-latest
     steps:
@@ -320,6 +337,7 @@ jobs:
         run: make wasm-test
 
   regtest-tests-wasm:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Regtest sdk-core Wasm tests
     runs-on: ubuntu-latest
     steps:
@@ -375,6 +393,7 @@ jobs:
         run: make wasm-regtest-test
 
   notification-plugin:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Check notification plugin
     runs-on: macOS-14
     steps:
@@ -433,6 +452,7 @@ jobs:
           swift build
 
   react-native:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Check react native bindings
     runs-on: macOS-14
     steps:
@@ -459,6 +479,7 @@ jobs:
           fi
 
   flutter:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Check Flutter bindings
     runs-on: macOS-latest
     steps:
@@ -492,8 +513,8 @@ jobs:
       - name: Generate Dart/Flutter bindings & Check Rust package for errors
         working-directory: packages/flutter_breez_liquid/
         run: |
-            just codegen
-            cd rust && cargo check
+          just codegen
+          cd rust && cargo check
 
       - name: Static Analysis
         working-directory: packages/flutter_breez_liquid/
@@ -529,6 +550,7 @@ jobs:
   #
   # See discussion at https://github.com/breez/breez-sdk/pull/971
   check-sdk-as-dependency:
+    if: ${{ (github.event_name != 'pull_request' || (!github.event.pull_request.draft && (github.event.action != 'edited' || github.event.changes.base != null))) }}
     name: Check SDK as Rust dependency in fresh project
     runs-on: ubuntu-latest
     steps:
